@@ -7,7 +7,10 @@ const serverPort = parseInt(PORT, 10);
 
 startServer(serverPort)
   .then(() => logger.info('Started Books API server'))
-  .catch(err => logger.error(`Unable to start server, Error: ${err.message}`));
+  .catch(err => {
+    logger.error(`Unable to start server, Error: ${err.message}`)
+    exitHandler()
+  });
 
 process.stdin.resume();
 

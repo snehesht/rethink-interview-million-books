@@ -1,5 +1,6 @@
 const { Sequelize } = require('sequelize');
 const db = require('./db');
+const logger = require('../lib/logger')
 
 const { DB_URI } = process.env;
 if (!DB_URI) {
@@ -89,4 +90,47 @@ const Books = db.define('books', {
   updatedAt: 'updated',
 });
 
-module.exports = Books;
+Books.search = async function (query = '', offset = 0, limit = 25) {
+  const sqlQuery = `SELECT * FROM (SELECT * FROM books WHERE fts_tsv @@ plainto_tsquery('english', :query)) AS fts ORDER BY ts_rank_cd(fts.fts_tsv, plainto_tsquery('english', :query)) DESC LIMIT :limit OFFSET :offset;`
+  logger.debug(sqlQuery);
+  return db.query(sqlQuery, {
+    type: Sequelize.QueryTypes.SELECT,
+    replacements: {query, offset, limit}
+  });
+}
+
+const initBooksFullTextSearch = async () => {
+  try {
+    const result = await db.query('SELECT EXISTS(SELECT * FROM pg_trigger WHERE tgname = \'books_fts_update_trigger\') as exists', { type: Sequelize.QueryTypes.SELECT });
+    if (!result[0].exists) {
+      await db.query('ALTER TABLE books ADD COLUMN IF NOT EXISTS fts_tsv tsvector;')
+      await db.query('CREATE INDEX IF NOT EXISTS fts_tsv_idx ON books USING GIN(fts_tsv);')
+      await db.query(`UPDATE "books" SET "fts_tsv" =
+        setweight(to_tsvector(coalesce(title,'')), 'A') ||
+        setweight(to_tsvector(coalesce(description,'')), 'D') ||
+        setweight(to_tsvector(coalesce(array_to_string(authors, ''),'')), 'A');`);
+      await db.query(`CREATE OR REPLACE FUNCTION books_fts_trigger() RETURNS trigger AS $$
+  begin
+    new.fts_tsv :=
+      setweight(to_tsvector(coalesce(new.title,'')), 'A') ||
+      setweight(to_tsvector(coalesce(new.description,'')), 'B') ||
+      setweight(to_tsvector(coalesce(array_to_string(new.authors, ''),'')), 'A');
+    return new;
+  end
+  $$ LANGUAGE plpgsql;`)
+      await db.query('CREATE TRIGGER books_fts_update_trigger BEFORE INSERT OR UPDATE ON books FOR EACH ROW EXECUTE PROCEDURE books_fts_trigger();')
+      logger.info('Setting Full text search on Books model')
+    } else {
+      logger.info('Full text search is available')
+    }
+    
+  } catch (error) {
+    logger.error(`Error setting up full text search, ${error.message}`);
+    throw error;
+  }
+}
+
+module.exports = {
+  Books,
+  initBooksFullTextSearch,
+};

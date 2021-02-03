@@ -20,7 +20,6 @@ const startServer = async (port = 8000) => {
     server = app.listen(port, () => logger.info(`Starting api-server on port ${port}`));
   } catch (error) {
     logger.error(`Error starting express server, ${error.message}`);
-    logger.errorStack(error);
     throw error;
   }
 }
