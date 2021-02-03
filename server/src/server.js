@@ -4,7 +4,11 @@ const helmet = require('helmet');
 const cors = require('cors');
 const logger = require('./lib/logger');
 const { initDatabase } = require('./models');
-const apiRouter = require('./api')
+const apiRouter = require('./api');
+const loadBooks = require('./lib/load-books')
+const { default:PQueue } = require('p-queue')
+
+const postStartQueue = new PQueue({ concurrency: 1 })
 
 const app = express();
 
@@ -21,6 +25,9 @@ const startServer = async (port = 8000) => {
   try {
     await initDatabase();
     server = app.listen(port, () => logger.info(`Starting api-server on port ${port}`));
+
+    // Load books
+    postStartQueue.add(async () => loadBooks())
   } catch (error) {
     logger.error(`Error starting express server, ${error.message}`);
     throw error;

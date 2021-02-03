@@ -6,9 +6,10 @@ const booksRouter = Router();
 
 booksRouter.get('/', async (req, res) => {
   try {
+    console.log(req.query)
     const query = req.query.query || '';
-    const limit = req.query.limit || 25;
-    const offset = req.query.offset || 0;
+    const limit = parseInt(req.query.limit, 10) || 25;
+    const offset = parseInt(req.query.offset, 10) || 0;
     const books = await Books.search(query, limit, offset)
     logger.info(`Querying Books with query '${query}' got ${books.length} results`)
     return res.send(books)

@@ -90,13 +90,10 @@ const Books = db.define('books', {
   updatedAt: 'updated',
 });
 
-Books.search = async function (query = '', offset = 0, limit = 25) {
-  const sqlQuery = `SELECT * FROM (SELECT * FROM books WHERE fts_tsv @@ plainto_tsquery('english', :query)) AS fts ORDER BY ts_rank_cd(fts.fts_tsv, plainto_tsquery('english', :query)) DESC LIMIT :limit OFFSET :offset;`
-  logger.debug(sqlQuery);
-  return db.query(sqlQuery, {
-    type: Sequelize.QueryTypes.SELECT,
-    replacements: {query, offset, limit}
-  });
+Books.search = async function (query = '', limit = 25, offset = 0) {
+  const sqlQuery = `SELECT * FROM (SELECT * FROM books WHERE fts_tsv @@ plainto_tsquery('english', '${query}')) AS fts ORDER BY ts_rank_cd(fts.fts_tsv, plainto_tsquery('english', '${query}')) DESC LIMIT ${limit} OFFSET ${offset}`;
+  logger.info(sqlQuery);
+  return db.query(sqlQuery, { type: Sequelize.QueryTypes.SELECT });
 }
 
 const initBooksFullTextSearch = async () => {
