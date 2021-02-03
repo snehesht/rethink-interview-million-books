@@ -1,0 +1,9 @@
+{
+  "name": "rethink-interview-million-books",
+  "version": "0.1.0",
+  "description": "Search a million books",
+  "main": "index.js",
+  "repository": "git@github.com:snehesht/rethink-interview-million-books.git",
+  "author": "snehesht <mail@snehesh.me>",
+  "license": "MIT"
+}
