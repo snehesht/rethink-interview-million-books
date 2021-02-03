@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const cors = require('cors');
 const logger = require('./lib/logger');
 const { initDatabase } = require('./models');
+const apiRouter = require('./api')
 
 const app = express();
 
@@ -12,6 +13,8 @@ app.use(bodyParser.json());
 app.use(helmet());
 app.use(cors());
 
+app.use('/health', (req, res) => res.send('OK')); // Health check
+app.use('/api/v1', apiRouter);
 
 let server;
 const startServer = async (port = 8000) => {
