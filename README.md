@@ -2,4 +2,8 @@
 
 Timeline
 Backend:  ~ 90mins
-Frontend: 
+Frontend: ~ 60mins
+
+Set .env variables before running `yarn start` within the server folder
+
+Deployed Demo - https://rethink-books-search.fly.dev
