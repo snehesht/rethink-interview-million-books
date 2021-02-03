@@ -17,6 +17,8 @@ app.use(bodyParser.json());
 app.use(helmet());
 app.use(cors());
 
+app.use(express.static('public'))
+
 app.use('/health', (req, res) => res.send('OK')); // Health check
 app.use('/api/v1', apiRouter);
 
