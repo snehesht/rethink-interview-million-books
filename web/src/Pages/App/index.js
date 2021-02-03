@@ -55,7 +55,7 @@ export default function App() {
       })
   };
 
-  useEffect(() => { fetchBooks(query, 15, 0) }, [query]);
+  useEffect(() => { fetchBooks(query, 15, 0) }, [query, 15, 0]);
 
   return (
     <div className={classes.root}>
